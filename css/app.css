@@ -485,12 +485,145 @@ table.table { width: 100%; border-collapse: collapse; font-size: 14px; }
   .show-sm { display: grid !important; }
 }
 
+/* ===========================================================
+   v2 — Pesanan, Meja, Stok, QR, misc
+   =========================================================== */
+.btn-success { background: var(--success); color: #fff; box-shadow: 0 6px 18px rgba(22,163,74,.28); }
+.btn-success:hover:not(:disabled) { background: #15803d; }
+a.btn { text-decoration: none; }
+.loading { display: grid; place-items: center; padding: 60px 0; }
+.spinner { width: 34px; height: 34px; border-radius: 50%; border: 4px solid var(--primary-soft); border-top-color: var(--primary); animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.boot { height: 100vh; height: 100dvh; display: grid; place-content: center; justify-items: center; gap: 22px; }
+.section-h { font-size: 15px; font-weight: 800; margin: 22px 0 10px; display: flex; align-items: center; gap: 8px; }
+.warn-line { margin-top: 12px; padding: 10px 12px; border-radius: 12px; background: var(--warning-soft); color: var(--warning); font-weight: 600; font-size: 13.5px; display: flex; gap: 8px; align-items: center; }
+
+/* rail badge */
+.rail-item { position: relative; }
+.rail-badge { position: absolute; top: 4px; right: 10px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 99px; background: var(--danger); color: #fff; font-size: 11.5px; font-weight: 800; display: grid; place-items: center; box-shadow: 0 0 0 2px var(--surface); animation: badgePulse 1.6s infinite; }
+@keyframes badgePulse { 50% { transform: scale(1.12); } }
+
+/* topbar pills */
+.qr-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; padding: 7px 12px; border-radius: 99px; min-height: 36px; }
+.qr-pill svg.i { width: 16px; height: 16px; }
+.qr-pill.on { background: var(--success-soft); color: var(--success); }
+.qr-pill.off { background: var(--danger-soft); color: var(--danger); }
+.net-pill.wait { background: var(--info-soft); color: var(--info); }
+
+/* password eye */
+.input-icon .pw-eye { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; color: var(--muted); }
+.input-icon .pw-eye svg.i { position: static; transform: none; }
+
+/* ---------- Pesanan ---------- */
+.orders-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
+.order-board { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.ocard { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius); display: flex; flex-direction: column; overflow: hidden; animation: pageIn .25s ease; }
+.ocard.st-new { border-color: var(--warning); box-shadow: 0 0 0 3px var(--warning-soft); }
+.ocard.st-preparing { border-color: var(--info); }
+.ocard.st-served { opacity: .8; }
+.ocard-h { display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-bottom: 1px dashed var(--border); }
+.ocode { font-size: 20px; font-weight: 900; letter-spacing: -.02em; color: var(--primary-600); min-width: 52px; }
+.oplace { font-weight: 800; display: flex; align-items: center; gap: 6px; }
+.oplace svg.i { width: 16px; height: 16px; }
+.oitems { padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.oitem { display: flex; gap: 10px; font-size: 15px; }
+.oitem b { min-width: 28px; color: var(--primary-600); }
+.oitem.done { text-decoration: line-through; color: var(--muted); }
+.onote { font-size: 13px; color: var(--warning); font-weight: 600; display: flex; align-items: center; gap: 4px; }
+.onote svg.i { width: 13px; height: 13px; }
+.ocard-f { padding: 10px 14px 14px; display: flex; flex-direction: column; gap: 10px; background: var(--surface-2); }
+.kitchen { position: sticky; top: 0; }
+.kq-n { font-size: 22px; font-weight: 900; color: var(--primary-600); min-width: 36px; text-align: right; }
+.stock-mini { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.sm-cell { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-radius: 10px; background: var(--surface-2); font-size: 12.5px; font-weight: 600; }
+.sm-cell b { font-size: 16px; }
+.sm-cell.warning { background: var(--warning-soft); color: var(--warning); }
+.sm-cell.danger { background: var(--danger-soft); color: var(--danger); }
+
+/* ---------- Meja ---------- */
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--muted); font-weight: 600; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.dot { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
+.dot.t-empty { background: var(--surface-3); } .dot.t-new { background: var(--warning); } .dot.t-prep { background: var(--info); } .dot.t-bill { background: var(--success); }
+.table-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.tcard { position: relative; text-align: left; min-height: 150px; border-radius: 20px; padding: 16px; background: var(--surface); border: 2px solid var(--border); display: flex; flex-direction: column; gap: 4px; transition: transform .08s; }
+.tcard:active { transform: scale(.98); }
+.tno { font-size: 15px; color: var(--muted); font-weight: 700; }
+.tno b { font-size: 30px; color: var(--text); font-weight: 900; margin-left: 2px; }
+.ttotal { font-size: 22px; font-weight: 900; margin-top: auto; }
+.tsub { font-size: 13px; font-weight: 600; }
+.tsince { font-size: 12px; }
+.tstate { position: absolute; top: 14px; right: 14px; font-size: 12.5px; font-weight: 800; padding: 4px 10px; border-radius: 99px; }
+.tcard.t-empty { border-style: dashed; background: transparent; }
+.tcard.t-new { border-color: var(--warning); background: var(--warning-soft); animation: tblink 1.4s infinite; }
+.tcard.t-new .tstate { background: var(--warning); color: #fff; }
+@keyframes tblink { 50% { box-shadow: 0 0 0 6px rgba(217,119,6,.18); } }
+.tcard.t-prep { border-color: var(--info); background: var(--info-soft); }
+.tcard.t-prep .tstate { background: var(--info); color: #fff; }
+.tcard.t-bill { border-color: var(--success); background: var(--success-soft); }
+.tcard.t-bill .tstate { background: var(--success); color: #fff; }
+.bill-order { padding: 10px 0; border-bottom: 1px dashed var(--border); }
+.bill-line { display: flex; justify-content: space-between; gap: 10px; font-size: 14.5px; padding: 3px 0 0 6px; }
+.target-pill { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 12px; background: var(--info-soft); color: var(--info); font-weight: 700; font-size: 13.5px; }
+.target-pill .btn { margin-left: auto; min-height: 30px; }
+
+/* ---------- Kasir extras ---------- */
+.pcard.maxed { opacity: .6; }
+.so-toggle { float: right; font-size: 11px; font-weight: 700; color: var(--muted); padding: 2px 6px; border-radius: 6px; background: var(--surface-2); }
+.so-toggle:hover { color: var(--danger); }
+.pcard.soldout { pointer-events: auto; }
+.pcard.soldout .so-toggle { color: var(--success); background: var(--success-soft); }
+.methods.two { grid-template-columns: 1fr 1fr; }
+.methods.two .method { min-height: 72px; font-size: 15px; }
+.qris-box { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.qris-box img { width: 100%; max-width: 300px; aspect-ratio: 1; object-fit: contain; border-radius: 16px; background: #fff; border: 1px solid var(--border); }
+.qris-amt { font-size: 20px; } .qris-amt b { color: var(--primary-600); font-size: 26px; }
+
+/* ---------- Stok ---------- */
+.stock-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.scard { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.scard.warning { border-color: var(--warning); }
+.scard.danger { border-color: var(--danger); background: var(--danger-soft); }
+.sval { font-size: 40px; font-weight: 900; letter-spacing: -.03em; line-height: 1; }
+.sval small { font-size: 14px; color: var(--muted); font-weight: 600; letter-spacing: 0; }
+
+/* ---------- Pengaturan / QR ---------- */
+.qris-thumb { width: 110px; height: 110px; border-radius: 14px; background: var(--surface-2); display: grid; place-items: center; overflow: hidden; flex: none; color: var(--muted); }
+.qris-thumb img { width: 100%; height: 100%; object-fit: contain; background: #fff; }
+.qris-thumb svg.i { width: 36px; height: 36px; }
+.qr-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.qr-cell { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px; border-radius: 14px; background: var(--surface-2); }
+.qr-img { width: 100%; max-width: 120px; background: #fff; border-radius: 8px; padding: 4px; }
+.qr-img svg { width: 100%; height: auto; display: block; }
+
+@media (max-width: 1180px) {
+  .orders-layout { grid-template-columns: minmax(0, 1fr) 260px; }
+}
+@media (max-width: 900px) {
+  .orders-layout { grid-template-columns: 1fr; }
+  .kitchen { position: static; }
+  .stock-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 640px) {
+  .table-grid { grid-template-columns: 1fr 1fr; }
+  .stock-grid { grid-template-columns: 1fr; }
+  .qr-grid { grid-template-columns: 1fr 1fr; }
+  .qr-pill span { display: none; }
+}
+
 /* ---------- Print (receipt only) ---------- */
 #print-area { display: none; }
 @media print {
-  @page { size: 58mm auto; margin: 2mm; }
   body { background: #fff; overflow: visible; }
   body > *:not(#print-area) { display: none !important; }
   #print-area { display: block !important; }
   #print-area .receipt { border: 0; padding: 0; max-width: none; font-size: 11px; }
+  /* QR meja: A4, 2 kolom */
+  #print-area.print-qr { width: 100%; }
+  .qr-print { display: grid; grid-template-columns: 1fr 1fr; gap: 10mm; }
+  .qr-card { border: 2px dashed #999; border-radius: 6mm; padding: 6mm; text-align: center; break-inside: avoid; font-family: Arial, sans-serif; color: #111; }
+  .qp-store { font-size: 13pt; font-weight: 700; }
+  .qp-no { font-size: 28pt; font-weight: 900; color: #ea580c; margin: 2mm 0; }
+  .qp-img svg { width: 60mm; height: 60mm; }
+  .qp-hint { font-size: 10pt; margin-top: 2mm; }
 }

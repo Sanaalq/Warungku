@@ -1,19 +1,13 @@
-/* WarungKu POS — Service Worker (offline-first) */
-const VERSION = 'wk-pos-v1.2.5';
+/* Ayam Kremez Mbak Indar — Service Worker
+   - App shell: stale-while-revalidate (UI keeps loading offline)
+   - Supabase API (other origin): NEVER cached, always live data */
+const VERSION = 'wk-pos-v2.0.0';
 const ASSETS = [
-  './',
-  './index.html',
-  './manifest.webmanifest',
-  './css/app.css',
-  './js/ui.js',
-  './js/db.js',
-  './js/pos.js',
-  './js/pages.js',
-  './js/app.js',
-  './assets/icon.svg',
-  './assets/icon-192.png',
-  './assets/icon-512.png',
-  './assets/icon-maskable-512.png',
+  './', './index.html', './manifest.webmanifest', './css/app.css',
+  './vendor/supabase.js', './vendor/qrcode.js',
+  './js/config.js', './js/ui.js', './js/pages.js', './js/db.js', './js/orders.js', './js/pos.js', './js/app.js',
+  './pesan/', './pesan/index.html', './pesan/pesan.css', './pesan/pesan.js',
+  './assets/icon.svg', './assets/icon-192.png', './assets/icon-512.png', './assets/icon-maskable-512.png',
 ];
 
 self.addEventListener('install', e => {
@@ -34,12 +28,13 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
 
   if (req.mode === 'navigate') {
+    const key = new URL(req.url).pathname.includes('/pesan') ? './pesan/index.html' : './index.html';
     e.respondWith(
       fetch(req).then(res => {
         const copy = res.clone();
-        caches.open(VERSION).then(c => c.put('./index.html', copy));
+        caches.open(VERSION).then(c => c.put(key, copy));
         return res;
-      }).catch(() => caches.match('./index.html'))
+      }).catch(() => caches.match(key))
     );
     return;
   }
