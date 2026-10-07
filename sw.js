@@ -1,7 +1,7 @@
 /* Ayam Kremez Mbak Indar — Service Worker
    - App shell: stale-while-revalidate (UI keeps loading offline)
    - Supabase API (other origin): NEVER cached, always live data */
-const VERSION = 'wk-pos-v2.0.0';
+const VERSION = 'wk-pos-v2.0.1';
 const ASSETS = [
   './', './index.html', './manifest.webmanifest', './css/app.css',
   './vendor/supabase.js', './vendor/qrcode.js',

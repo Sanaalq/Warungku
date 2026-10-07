@@ -52,7 +52,20 @@ async function loadOrders() {
   const ids = myOrderIds();
   if (!ids.length) { S.orders = []; return; }
   const { data, error } = await sb.rpc('order_status', { p_ids: ids });
-  if (!error) S.orders = data || [];
+  if (error) return;
+  const all = data || [];
+  // Tagihan sudah lunas / meja dikosongkan = pelanggan sudah selesai → hapus dari HP ini
+  const closed = all.filter(o => ['paid', 'void'].includes(o.session_status) || ['paid', 'void'].includes(o.status));
+  const found = new Set(all.map(o => o.id));
+  if (closed.length || found.size < ids.length) {
+    const drop = new Set(closed.map(o => o.id));
+    const wasActive = S.orders.some(o => drop.has(o.id));
+    saved.orders = (saved.orders || []).filter(o => found.has(o.id) && !drop.has(o.id));
+    if (wasActive && closed.some(o => o.session_status === 'paid' || o.status === 'paid')) S.thanks = true;
+    if (!saved.orders.length) { S.name = ''; }
+    persist();
+  }
+  S.orders = all.filter(o => !closed.includes(o));
 }
 
 /* ---------- render ---------- */
@@ -192,24 +205,35 @@ async function send() {
   }
 }
 
-const STEPS = [['new', 'Menunggu konfirmasi', '⏳'], ['preparing', 'Sedang disiapkan', '🔥'], ['served', 'Sudah diantar', '🍽️'], ['paid', 'Lunas', '✅']];
+const STEPS = [['new', 'Menunggu konfirmasi', '⏳'], ['preparing', 'Sedang disiapkan', '🔥'], ['served', 'Sudah diantar', '🍽️']];
 function renderStatus(main) {
+  if (S.thanks && !S.orders.length) {
+    main.innerHTML = `<div class="center thanks">
+      <div class="big-ico">🙏</div><h2>Terima kasih!</h2>
+      <p>Pembayaran sudah diterima. Semoga suka sama ayamnya, ditunggu kedatangannya lagi ya 😊</p>
+      <button class="cta" id="again" style="max-width:320px">Pesan Lagi</button></div>`;
+    $('#again').onclick = () => { S.thanks = false; S.view = 'menu'; render(); };
+    return;
+  }
   const list = S.orders;
-  const unpaid = list.filter(o => !['paid', 'rejected', 'void'].includes(o.status));
+  const unpaid = list.filter(o => !['rejected', 'void'].includes(o.status));
+  const allServed = unpaid.length && unpaid.every(o => o.status === 'served');
   main.innerHTML = `
     <div class="status-top"><button class="back" id="back">← Menu</button><h2>Pesananku</h2></div>
+    ${allServed ? `<div class="enjoy">🍽️ <b>Selamat menikmati!</b><br><span>Kalau sudah selesai makan, silakan bayar di kasir (Tunai / QRIS). Mau nambah? Tekan <b>Tambah Pesanan</b>.</span></div>` : ''}
     ${list.length ? list.map(o => {
       const bad = ['rejected', 'void'].includes(o.status);
       const idx = STEPS.findIndex(s => s[0] === o.status);
       return `<article class="ord ${bad ? 'bad' : ''}">
         <div class="ord-h"><div><div class="code">${esc(o.code)}</div><div class="muted">${o.order_type === 'take_away' ? 'Bungkus' : `Meja ${o.table_no}`} · ${new Date(o.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</div></div><b>${rp(o.total)}</b></div>
         ${bad ? `<div class="rej">❌ ${o.status === 'rejected' ? 'Pesanan ditolak' : 'Pesanan dibatalkan'}${o.reject_reason ? `: <b>${esc(o.reject_reason)}</b>` : ''}</div>` : `
-        <ol class="steps">${STEPS.map((s, i) => `<li class="${i < idx ? 'done' : i === idx ? 'now' : ''}"><span>${s[2]}</span>${s[1]}</li>`).join('')}</ol>
+        <ol class="steps">${STEPS.map((s, i) => { const done = i < idx || (o.status === 'served' && i === idx); return `<li class="${done ? 'done' : i === idx ? 'now' : ''}"><span>${done ? '✓' : s[2]}</span>${done && i === 0 ? 'Dikonfirmasi' : s[1]}</li>`; }).join('')}</ol>
         ${o.status === 'new' && o.queue_ahead ? `<p class="muted q">Antrean di depanmu: <b>${o.queue_ahead}</b> pesanan</p>` : ''}`}
         <ul class="oi">${(o.items || []).map(i => `<li><span>${i.qty}× ${esc(i.name)}${i.note ? ` <i>(${esc(i.note)})</i>` : ''}</span><span>${rp(i.qty * i.price)}</span></li>`).join('')}</ul>
       </article>`;
     }).join('') : `<div class="center"><div class="big-ico">🧾</div><p>Belum ada pesanan.</p></div>`}
-    ${unpaid.length ? `<div class="pay-box">💵 Total belum dibayar: <b>${rp(unpaid.reduce((a, o) => a + o.total, 0))}</b><br><span class="muted">Bayar di kasir setelah makan (Tunai / QRIS).</span></div>` : ''}
+    ${unpaid.length && !allServed ? `<div class="pay-box">💵 Total belum dibayar: <b>${rp(unpaid.reduce((a, o) => a + o.total, 0))}</b><br><span class="muted">Bayar di kasir setelah makan (Tunai / QRIS).</span></div>` : ''}
+    ${unpaid.length && allServed ? `<div class="pay-box">💵 Total tagihan: <b>${rp(unpaid.reduce((a, o) => a + o.total, 0))}</b></div>` : ''}
     <button class="cta ghost" id="more">+ Tambah Pesanan</button>
     <p class="muted center live">● Status diperbarui otomatis</p>`;
   $('#back').onclick = () => { S.view = 'menu'; renderMain(); };
@@ -223,9 +247,11 @@ function startPolling() {
   pollT = setInterval(async () => {
     if (document.visibilityState !== 'visible') return;
     const before = JSON.stringify(S.orders.map(o => o.status));
+    const hadOrders = S.orders.length;
     try {
       await Promise.all([loadOrders(), loadMenu()]);
       const after = JSON.stringify(S.orders.map(o => o.status));
+      if (hadOrders && !S.orders.length && S.thanks) { S.view = 'status'; toast('✅ Pembayaran diterima. Terima kasih!'); }
       if (before !== after && S.orders.length) {
         const latest = S.orders[0];
         if (latest?.status === 'preparing') toast('🔥 Pesananmu sedang disiapkan!');
@@ -244,7 +270,7 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
   if (!TOKEN) { S.shop = { table_no: null }; return render(); }
   try {
     await Promise.all([loadMenu(), loadOrders()]);
-    if (S.orders.some(o => !['paid', 'rejected', 'void'].includes(o.status))) S.view = 'status';
+    if (S.orders.length) S.view = 'status';
     render(); startPolling();
   } catch (e) {
     $('#app').innerHTML = `<div class="center"><div class="big-ico">📡</div><h2>Gagal memuat</h2><p>${esc(friendly(e))}</p><button class="cta" onclick="location.reload()">Coba lagi</button></div>`;
